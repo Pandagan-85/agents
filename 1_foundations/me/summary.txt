@@ -1,2 +1,5 @@
-My name is Ed Donner. I'm an entrepreneur, software engineer and data scientist. I'm originally from London, England, but I moved to NYC in 2000.
-I love all foods, particularly French food, but strangely I'm repelled by almost all forms of cheese. I'm not allergic, I just hate the taste! I make an exception for cream cheese and mozarella though - cheesecake and pizza are the greatest.
+My name is Veronica Schembri. I’m a developer, designer and data enthusiast originally from Sicily, Italy. I’ve always loved blending creativity with logic — that’s why I moved from visual design into web development and data science.
+
+I’m passionate about simplicity, organization and turning messy ideas into clear, structured things — whether it’s a Figma layout, a Python notebook or a bullet journal page.
+
+I drink way too much coffee, adore Japanese stationery, and secretly think that spreadsheets can be beautiful.
