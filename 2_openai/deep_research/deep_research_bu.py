@@ -1,7 +1,6 @@
 import gradio as gr
 from dotenv import load_dotenv
-from research_manager import ResearchManager  # Classe originale
-from research_agent_manager import research_manager_agent  # Nuovo agent
+from research_manager import ResearchManager
 from clarification_agent import clarification_agent
 from agents import Runner
 import asyncio
@@ -55,37 +54,8 @@ async def generate_clarifications(query: str):
         return f"Error generating clarifications: {str(e)}", "", "", "", gr.update(visible=False), gr.update(visible=True)
 
 
-async def run_research_with_agent(answer1: str, answer2: str, answer3: str):
-    """Esegue la ricerca usando il Research Manager Agent (no streaming)"""
-    if not answer1.strip() or not answer2.strip() or not answer3.strip():
-        yield "❌ Please answer all clarification questions before proceeding with research."
-        return
-
-    try:
-        # Costruisce le chiarificazioni in modo più pulito
-        clarifications = "User provided these clarifications:\n\n"
-        answers = [answer1.strip(), answer2.strip(), answer3.strip()]
-        for i, (question, answer) in enumerate(zip(app_state.clarification_questions, answers), 1):
-            clarifications += f"Question {i}: {question.question}\n"
-            clarifications += f"Answer {i}: {answer}\n\n"
-
-        # Prepara la query con clarifications
-        enhanced_query = f"Original query: {app_state.current_query}\n\n{clarifications}"
-
-        yield "🤖 **Starting Agentic Research...**\n\n"
-        yield "🔄 **The Research Manager Agent is orchestrating the research process...**\n\n"
-
-        # Esegue la ricerca usando il Research Manager Agent
-        result = await Runner.run(research_manager_agent, enhanced_query)
-
-        yield f"✅ **Research completed by Agent!**\n\n## 📋 Research Results\n\n{result.final_output}"
-
-    except Exception as e:
-        yield f"❌ **Error during agentic research:** {str(e)}"
-
-
-async def run_research_with_streaming(answer1: str, answer2: str, answer3: str):
-    """Esegue la ricerca con streaming usando la classe ResearchManager"""
+async def run_research_with_clarifications(answer1: str, answer2: str, answer3: str):
+    """Esegue la ricerca usando le risposte alle domande chiarificatrici con streaming"""
     if not answer1.strip() or not answer2.strip() or not answer3.strip():
         yield "❌ Please answer all clarification questions before proceeding with research."
         return
@@ -112,6 +82,7 @@ async def run_research_with_streaming(answer1: str, answer2: str, answer3: str):
                 accumulated_result += f"🔗 **{chunk}**\n\n"
             elif "research complete" in chunk.lower():
                 accumulated_result += f"✅ **{chunk}**\n\n"
+                # Il prossimo chunk dovrebbe essere il report finale
                 continue
             elif len(chunk) > 500:  # Probabilmente il report finale
                 accumulated_result += f"## 📋 Final Research Report\n\n{chunk}"
@@ -119,12 +90,13 @@ async def run_research_with_streaming(answer1: str, answer2: str, answer3: str):
                 return
             else:
                 accumulated_result += f"⏳ **Status:** {chunk}\n\n"
+                # Aggiorna l'interfaccia in tempo reale
                 yield accumulated_result
 
         yield accumulated_result
 
     except Exception as e:
-        yield f"❌ **Error during streaming research:** {str(e)}"
+        yield f"❌ **Error during research:** {str(e)}"
 
 
 def reset_interface():
@@ -142,13 +114,13 @@ def reset_interface():
     )
 
 
-# Interfaccia Gradio con due opzioni
+# Interfaccia Gradio migliorata
 with gr.Blocks(theme=gr.themes.Default(primary_hue="blue"), title="Deep Research with Clarifications") as ui:
     gr.Markdown("""
     # 🔍 Deep Research Agent
     ### AI-Powered Research with Clarification Questions
     
-    Choose between **Agentic Research** (complete automation) or **Streaming Research** (step-by-step progress).
+    This system will ask you clarifying questions to provide more focused and relevant research results.
     """)
 
     with gr.Group(visible=True) as initial_section:
@@ -195,12 +167,9 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="blue"), title="Deep Research
                 scale=1
             )
 
-        gr.Markdown("## Step 3: Choose Research Method")
         with gr.Row():
-            agent_btn = gr.Button(
-                "🤖 Agentic Research (Complete)", variant="primary", scale=2)
-            streaming_btn = gr.Button(
-                "📊 Streaming Research (Progressive)", variant="secondary", scale=2)
+            research_btn = gr.Button(
+                "🚀 Start Research", variant="primary", scale=2)
             reset_btn = gr.Button("🔄 Start Over", variant="secondary", scale=1)
 
     gr.Markdown("## 📊 Research Results")
@@ -215,20 +184,12 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="blue"), title="Deep Research
                  answer3, clarification_section, initial_section]
     )
 
-    # Agentic research - completo ma senza streaming
-    agent_btn.click(
-        fn=run_research_with_agent,
+    # Usa streaming per mostrare progressi in tempo reale
+    research_btn.click(
+        fn=run_research_with_clarifications,
         inputs=[answer1, answer2, answer3],
         outputs=[report],
-        show_progress=True
-    )
-
-    # Streaming research - progressivo
-    streaming_btn.click(
-        fn=run_research_with_streaming,
-        inputs=[answer1, answer2, answer3],
-        outputs=[report],
-        show_progress=True
+        show_progress=True  # Mostra barra di progresso
     )
 
     reset_btn.click(
