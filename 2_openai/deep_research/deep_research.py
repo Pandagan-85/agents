@@ -6,6 +6,7 @@ load_dotenv(override=True)
 
 
 async def run(query: str):
+    # callback che fa mostrare i risultati in maniera incrementale
     async for chunk in ResearchManager().run(query):
         yield chunk
 
@@ -15,9 +16,8 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="sky")) as ui:
     query_textbox = gr.Textbox(label="What topic would you like to research?")
     run_button = gr.Button("Run", variant="primary")
     report = gr.Markdown(label="Report")
-    
+
     run_button.click(fn=run, inputs=query_textbox, outputs=report)
     query_textbox.submit(fn=run, inputs=query_textbox, outputs=report)
 
 ui.launch(inbrowser=True)
-
