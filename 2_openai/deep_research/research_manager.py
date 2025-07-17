@@ -3,38 +3,19 @@ from search_agent import search_agent
 from planner_agent import planner_agent, WebSearchItem, WebSearchPlan
 from writer_agent import writer_agent, ReportData
 from email_agent import email_agent
-from clarification_agent import clarification_agent
 import asyncio
-
 
 class ResearchManager:
 
-    async def run(self, query: str, clarifications: str = None):
+    async def run(self, query: str):
         """ Run the deep research process, yielding the status updates and the final report"""
         trace_id = gen_trace_id()
-        # lo trattiamo come un generatore usando yield
         with trace("Research trace", trace_id=trace_id):
-            print(
-                f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}")
+            print(f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}")
             yield f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}"
-
-            # Genera domande di chiarimento
-            yield "Generating clarification questions..."
-            clarification_questions = await self.generate_clarifications(query)
-
-            yield f"Clarification Question generated: {clarification_questions}"
-
-            # Se abbiamo chiarificazioni le usiamo per migliorare la query
-            if clarifications and clarifications.strip():
-                enhanced_query = f"Original query: {query}\n\nUser clarifications: {clarifications}"
-                yield f"Using clarifications to enhance search..."
-            else:
-                enhanced_query = query
-                yield "No clarifications provided, using original query..."
-
             print("Starting research...")
             search_plan = await self.plan_searches(query)
-            yield "Searches planned, starting to search..."
+            yield "Searches planned, starting to search..."     
             search_results = await self.perform_searches(search_plan)
             yield "Searches complete, writing report..."
             report = await self.write_report(query, search_results)
@@ -42,14 +23,7 @@ class ResearchManager:
             await self.send_email(report)
             yield "Email sent, research complete"
             yield report.markdown_report
-
-    async def generate_clarifications(self, query: str):
-        """ Generate clarification questions for the query """
-        result = await Runner.run(clarification_agent, f"Query: {query}")
-        questions = []
-        for i, q in enumerate(result.final_output.questions, 1):
-            questions.append(f"{i}. {q.question}")
-        return "\n".join(questions)
+        
 
     async def plan_searches(self, query: str) -> WebSearchPlan:
         """ Plan the searches to perform for the query """
@@ -65,8 +39,7 @@ class ResearchManager:
         """ Perform the searches to perform for the query """
         print("Searching...")
         num_completed = 0
-        tasks = [asyncio.create_task(self.search(item))
-                 for item in search_plan.searches]
+        tasks = [asyncio.create_task(self.search(item)) for item in search_plan.searches]
         results = []
         for task in asyncio.as_completed(tasks):
             result = await task
@@ -100,7 +73,7 @@ class ResearchManager:
 
         print("Finished writing report")
         return result.final_output_as(ReportData)
-
+    
     async def send_email(self, report: ReportData) -> None:
         print("Writing email...")
         result = await Runner.run(
