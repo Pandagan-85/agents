@@ -8,8 +8,9 @@ import requests
 class PushNotificationInput(BaseModel):
     """A message to be sent as a push notification to the user."""
     message: str = Field(...,
-        description="The message to be sent as a push notification to the user."
-    )
+                         description="The message to be sent as a push notification to the user."
+                         )
+
 
 class PushNotificationTool(BaseTool):
     name: str = "Send a push notification"
@@ -18,7 +19,8 @@ class PushNotificationTool(BaseTool):
     )
     args_schema: Type[BaseModel] = PushNotificationInput
 
-    def _run(self, message: str) -> str:
+    def _run(self, **kwargs) -> str:
+        message = kwargs.get('message', '')
         pushover_user = os.getenv("PUSHOVER_USER")
         pushover_token = os.getenv("PUSHOVER_TOKEN")
         pushover_url = "https://api.pushover.net/1/messages.json"
