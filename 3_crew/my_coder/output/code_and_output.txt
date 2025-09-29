@@ -1,0 +1,20 @@
+```
+def calculate_series(n):
+    total = 0.0
+    sign = 1
+    for i in range(n):
+        term = sign * (1 / (2 * i + 1))
+        total += term
+        sign *= -1  # Alternate the sign for each term
+    return total * 4
+
+# Calculate the series for the first 10,000 terms
+result = calculate_series(10000)
+
+# Print the result
+print(result)
+
+Output: 3.1414926535900345
+``` 
+
+The above content represents both the program code and its output.
