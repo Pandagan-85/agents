@@ -5,8 +5,12 @@ from autogen_ext.runtimes.grpc import GrpcWorkerAgentRuntime
 from autogen_core import AgentId
 import messages
 import asyncio
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 HOW_MANY_AGENTS = 20
+
 
 async def create_and_message(worker, creator_id, i: int):
     try:
@@ -16,14 +20,16 @@ async def create_and_message(worker, creator_id, i: int):
     except Exception as e:
         print(f"Failed to run worker {i} due to exception: {e}")
 
+
 async def main():
     host = GrpcWorkerAgentRuntimeHost(address="localhost:50051")
-    host.start() 
+    host.start()
     worker = GrpcWorkerAgentRuntime(host_address="localhost:50051")
     await worker.start()
     result = await Creator.register(worker, "Creator", lambda: Creator("Creator"))
     creator_id = AgentId("Creator", "default")
-    coroutines = [create_and_message(worker, creator_id, i) for i in range(1, HOW_MANY_AGENTS+1)]
+    coroutines = [create_and_message(worker, creator_id, i)
+                  for i in range(1, HOW_MANY_AGENTS+1)]
     await asyncio.gather(*coroutines)
     try:
         await worker.stop()
@@ -32,9 +38,5 @@ async def main():
         print(e)
 
 
-
-
 if __name__ == "__main__":
     asyncio.run(main())
-
-
